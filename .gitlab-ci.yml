@@ -27,7 +27,8 @@ synchro-annuaire:
     ANNUAIRE_PROXY: "http://172.16.0.53:3128"
   before_script:
     - cat /etc/ssl/certs/ca-certificates.crt mefr-ca.crt > ca-bundle.crt
-    - pip install --no-cache-dir pandas pyarrow boto3
+    # boto3 < 1.44 : le Nexus n'a pas encore botocore 1.44.1 (404) ; retirer la borne quand il l'aura
+    - pip install --no-cache-dir pandas pyarrow "boto3<1.44"
   script:
     # : pas d'adresses dans le journal du pipeline
     - python synchroniser_annuaire.py $ANNUAIRE_OPTIONS
