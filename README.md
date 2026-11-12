@@ -1,4 +1,4 @@
-# synchro-annuaire
+# synchro-annuaire 
 
 Met à jour chaque jour `annuaire.parquet` (MinIO, bucket `db-sd2`, colonnes `mail`, `affectation`) à partir du
 CSV de l'annuaire du service. Les applications (Opsonium…) ne font que lire ce fichier.
