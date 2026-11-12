@@ -1,0 +1,33 @@
+#==============================================================================
+# Synchronisation quotidienne de l'annuaire (annuaire.parquet, bucket db-sd2)
+#==============================================================================
+# Lancé par la planification de la Forge (Build → Pipeline schedules). Mise en place : README.md.
+#
+# Variables CI/CD du projet (Settings → CI/CD → Variables, masquées) :
+#   AWS_S3_ENDPOINT, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+#     clés MinIO durables : lecture et écriture d'annuaire.parquet seulement
+# Variable de la planification :
+#   ANNUAIRE_OPTIONS = --apply
+#     sans elle, le job contrôle le CSV et n'envoie rien
+#==============================================================================
+
+synchro-annuaire:
+  image: python:3.11-slim
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  tags:
+    - nubonyxia
+  variables:
+    AWS_DEFAULT_REGION: "us-east-1"
+    PIP_INDEX_URL: "https://nexus.sg-bhub-infra-dev-infra.sep.nuage01.fi.francecloud.rie.gouv.fr/repository/pypi-group/simple"
+    # Autorités publiques + autorité du ministère (Nexus, MinIO)
+    PIP_CERT: "$CI_PROJECT_DIR/ca-bundle.crt"
+    AWS_CA_BUNDLE: "$CI_PROJECT_DIR/ca-bundle.crt"
+    # turgot.alize n'est pas résolu depuis le pod du job : le CSV passe par le proxy du lab
+    ANNUAIRE_PROXY: "http://172.16.0.53:3128"
+  before_script:
+    - cat /etc/ssl/certs/ca-certificates.crt mefr-ca.crt > ca-bundle.crt
+    - pip install --no-cache-dir pandas pyarrow boto3
+  script:
+    # : pas d'adresses dans le journal du pipeline
+    - python synchroniser_annuaire.py $ANNUAIRE_OPTIONS
